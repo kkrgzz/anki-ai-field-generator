@@ -53,17 +53,25 @@ class PreviewDialog(QDialog):
         self.setMinimumSize(700, 500)
         self.setModal(True)
 
+        apply_stylesheet(self)
+
         layout = QVBoxLayout(self)
+        layout.setSpacing(SPACING_MD)
 
         # --- Prompt section ---
-        layout.addWidget(self._bold_label("System Prompt:"))
+        prompt_group = QGroupBox("Prompts")
+        prompt_layout = QVBoxLayout()
+        prompt_layout.setSpacing(SPACING_MD)
+        prompt_group.setLayout(prompt_layout)
+
+        prompt_layout.addWidget(self._section_label("System Prompt"))
         self.system_prompt_view = QTextEdit()
         self.system_prompt_view.setReadOnly(True)
         self.system_prompt_view.setMaximumHeight(120)
         self.system_prompt_view.setPlainText(client.prompt_config.system_prompt)
-        layout.addWidget(self.system_prompt_view)
+        prompt_layout.addWidget(self.system_prompt_view)
 
-        layout.addWidget(self._bold_label("User Prompt (filled with card data):"))
+        prompt_layout.addWidget(self._section_label("User Prompt (filled with card data)"))
         self.user_prompt_view = QTextEdit()
         self.user_prompt_view.setReadOnly(True)
         self.user_prompt_view.setMaximumHeight(100)
@@ -72,28 +80,46 @@ class PreviewDialog(QDialog):
         except Exception as e:
             filled_prompt = f"[Error filling prompt: {e}]"
         self.user_prompt_view.setPlainText(filled_prompt)
-        layout.addWidget(self.user_prompt_view)
+        prompt_layout.addWidget(self.user_prompt_view)
+
+        layout.addWidget(prompt_group)
 
         # --- Response section ---
-        layout.addWidget(self._bold_label("AI Response:"))
+        response_group = QGroupBox("AI Response")
+        response_layout = QVBoxLayout()
+        response_layout.setSpacing(SPACING_MD)
+        response_group.setLayout(response_layout)
+
         self.response_view = QTextEdit()
         self.response_view.setReadOnly(True)
-        layout.addWidget(self.response_view)
+        response_layout.addWidget(self.response_view)
+
+        layout.addWidget(response_group)
 
         # --- Field mapping preview ---
-        layout.addWidget(self._bold_label("Field Mapping Preview:"))
+        mapping_group = QGroupBox("Field Mapping Preview")
+        mapping_layout = QVBoxLayout()
+        mapping_layout.setSpacing(SPACING_MD)
+        mapping_group.setLayout(mapping_layout)
+
         self.mapping_view = QTextEdit()
         self.mapping_view.setReadOnly(True)
         self.mapping_view.setMaximumHeight(120)
-        layout.addWidget(self.mapping_view)
+        mapping_layout.addWidget(self.mapping_view)
+
+        layout.addWidget(mapping_group)
 
         # --- Status ---
         self.status_label = QLabel("")
+        self.status_label.setProperty("cssClass", "status-info")
         layout.addWidget(self.status_label)
 
         # --- Buttons ---
         button_layout = QHBoxLayout()
+        button_layout.setSpacing(SPACING_MD)
+
         self.run_button = QPushButton("Send to AI")
+        self.run_button.setProperty("cssClass", "primary")
         self.run_button.clicked.connect(self.run_preview)
         button_layout.addWidget(self.run_button)
 
@@ -146,12 +172,9 @@ class PreviewDialog(QDialog):
         self.response_view.setPlainText(f"Error:\n{error_msg}")
         self.status_label.setText("Request failed.")
 
-    def _bold_label(self, text: str) -> QLabel:
+    def _section_label(self, text: str) -> QLabel:
         label = QLabel(text)
-        font = label.font()
-        font.setBold(True)
-        font.setPointSize(11)
-        label.setFont(font)
+        label.setStyleSheet("font-weight: bold; font-size: 12px;")
         return label
 
     def closeEvent(self, event):
