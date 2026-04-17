@@ -9,6 +9,8 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import QThread, Qt
 
+from .styles import apply_stylesheet, SPACING_MD, SPACING_LG
+
 
 class ProgressDialog(QDialog):
     def __init__(self, worker: QThread, success_callback: Callable):
@@ -17,34 +19,43 @@ class ProgressDialog(QDialog):
         self.setWindowTitle("Processing")
         self.setModal(True)
         self.setWindowModality(Qt.WindowModality.ApplicationModal)
-        self.resize(400, 250)
+        self.resize(450, 200)
+
+        apply_stylesheet(self)
 
         self.layout = QVBoxLayout()
+        self.layout.setSpacing(SPACING_LG)
+
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setMaximum(100)
+        self.layout.addWidget(self.progress_bar)
 
         self.label = QLabel("Starting processing...")
         self.label.setWordWrap(True)
-        self.progress_bar = QProgressBar()
-        self.progress_bar.setMaximum(100)
+        self.layout.addWidget(self.label)
+
+        self.layout.addStretch()
+
+        button_layout = QHBoxLayout()
+        button_layout.setSpacing(SPACING_MD)
 
         self.cancel_button = QPushButton("Cancel")
         self.cancel_button.clicked.connect(self.cancel)
+        button_layout.addWidget(self.cancel_button)
+
         self.resume_button = QPushButton("Continue")
         self.resume_button.clicked.connect(self.resume)
         self.resume_button.hide()
+        button_layout.addWidget(self.resume_button)
+
         self.close_button = QPushButton("Close")
+        self.close_button.setProperty("cssClass", "primary")
         self.close_button.clicked.connect(self.on_success)
         self.close_button.hide()
-
-        self.layout.addWidget(self.progress_bar)
-        self.layout.addWidget(self.label)
-
-        button_layout = QHBoxLayout()
-        button_layout.addWidget(self.cancel_button)
-        button_layout.addWidget(self.resume_button)
         button_layout.addWidget(self.close_button)
+
         self.layout.addLayout(button_layout)
         self.setLayout(self.layout)
-        self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         self.worker = worker
         self.worker.progress_updated.connect(self.update_progress)
