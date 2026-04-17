@@ -2,6 +2,7 @@
 
 from PyQt6.QtWidgets import (
     QComboBox,
+    QFileDialog,
     QHBoxLayout,
     QInputDialog,
     QMessageBox,
@@ -42,6 +43,14 @@ class PresetBar(QWidget):
         delete_btn = QPushButton("Delete")
         delete_btn.clicked.connect(self._on_delete)
         layout.addWidget(delete_btn)
+
+        export_btn = QPushButton("Export")
+        export_btn.clicked.connect(self._on_export)
+        layout.addWidget(export_btn)
+
+        import_btn = QPushButton("Import")
+        import_btn.clicked.connect(self._on_import)
+        layout.addWidget(import_btn)
 
         layout.addStretch()
 
@@ -117,3 +126,36 @@ class PresetBar(QWidget):
         if reply == QMessageBox.StandardButton.Yes:
             PresetManager.delete_preset(name)
             self._refresh_list()
+
+    def _on_export(self):
+        file_path, _ = QFileDialog.getSaveFileName(
+            self, "Export Presets", "anki_ai_presets.json",
+            "JSON Files (*.json)"
+        )
+        if not file_path:
+            return
+        try:
+            PresetManager.export_presets(file_path)
+            QMessageBox.information(
+                self, "Export Complete",
+                f"Presets exported to {file_path}"
+            )
+        except Exception as e:
+            QMessageBox.critical(self, "Export Failed", str(e))
+
+    def _on_import(self):
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "Import Presets", "",
+            "JSON Files (*.json)"
+        )
+        if not file_path:
+            return
+        try:
+            imported = PresetManager.import_presets(file_path)
+            self._refresh_list()
+            QMessageBox.information(
+                self, "Import Complete",
+                f"Imported {len(imported)} preset(s): {', '.join(imported)}"
+            )
+        except Exception as e:
+            QMessageBox.critical(self, "Import Failed", str(e))
