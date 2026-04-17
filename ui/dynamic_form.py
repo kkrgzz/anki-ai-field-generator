@@ -4,21 +4,24 @@ from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
+    QLabel,
     QLineEdit,
     QComboBox,
     QPushButton,
 )
 
+from .styles import SPACING_SM, SPACING_MD
+
 
 class DynamicForm(QWidget):
     def __init__(self, keys: list[str], fields: list[str], card_fields: list[str]):
         super().__init__()
-        self.layout = QVBoxLayout(self)  # Main layout
+        self.layout = QVBoxLayout(self)
+        self.layout.setSpacing(SPACING_SM)
+        self.layout.setContentsMargins(0, 0, 0, 0)
         self._card_fields = [""] + card_fields if card_fields[0] != "" else card_fields
-        self._item_width = 250
 
-        # Button to add new row
-        self.add_button = QPushButton("Add Row")
+        self.add_button = QPushButton("+ Add Mapping")
         self.add_button.clicked.connect(partial(self.add_row, key="", field=""))
         self._fill_initial_data(keys, fields, card_fields)
         self.layout.addWidget(self.add_button)
@@ -37,26 +40,24 @@ class DynamicForm(QWidget):
             self.add_row()
 
     def add_row(self, key="", field=""):
-        """
-        Add an additional row
-        """
-        # Create a new horizontal layout for the row
         row_layout = QHBoxLayout()
+        row_layout.setSpacing(SPACING_MD)
 
-        # Add a text box
         text_box = QLineEdit()
+        text_box.setPlaceholderText("AI response key")
         row_layout.addWidget(text_box)
         text_box.setText(key)
-        text_box.setMaximumWidth(self._item_width)
 
-        # Add a dropdown
+        arrow = QLabel("\u2192")
+        arrow.setProperty("cssClass", "arrow")
+        arrow.setFixedWidth(20)
+        row_layout.addWidget(arrow)
+
         combo_box = QComboBox()
-        combo_box.setMaximumWidth(self._item_width)
         combo_box.addItems(self._card_fields)
         row_layout.addWidget(combo_box)
         combo_box.setCurrentText(field)
 
-        # Add the row to the main layout above the buttons
         self.layout.insertLayout(self.layout.count() - 1, row_layout)
 
     def get_inputs(self):
