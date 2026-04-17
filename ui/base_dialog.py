@@ -133,7 +133,7 @@ class UserBaseDialog(QWidget, metaclass=MyMeta):
         preset_desc.setWordWrap(True)
         preset_layout.addWidget(preset_desc)
 
-        self.preset_bar = PresetBar()
+        self.preset_bar = PresetBar(app_settings=self.app_settings)
         self.preset_bar.get_current_values = self._get_preset_values
         self.preset_bar.preset_loaded.connect(
             lambda preset: self._apply_preset(preset, card_fields)

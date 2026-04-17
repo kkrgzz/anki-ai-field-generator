@@ -10,8 +10,10 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 from PyQt6.QtCore import pyqtSignal
+from aqt.qt import QSettings
 
 from ..core.preset_manager import PresetManager
+from ..core.settings import SettingsNames
 from .styles import SPACING_SM
 
 _NO_PRESET = "(No preset)"
@@ -22,15 +24,21 @@ class PresetBar(QWidget):
 
     preset_loaded = pyqtSignal(dict)
 
-    def __init__(self, parent=None):
+    def __init__(self, app_settings: QSettings = None, parent=None):
         super().__init__(parent)
+        self._app_settings = app_settings
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(SPACING_SM)
 
         self.combo = QComboBox()
         self.combo.setMinimumWidth(200)
-        self._refresh_list()
+        last_preset = ""
+        if self._app_settings:
+            last_preset = self._app_settings.value(
+                SettingsNames.LAST_PRESET_NAME, defaultValue="", type=str
+            )
+        self._refresh_list(select_name=last_preset)
         self.combo.currentIndexChanged.connect(self._on_selection_changed)
         layout.addWidget(self.combo)
 
@@ -72,10 +80,16 @@ class PresetBar(QWidget):
     def _on_selection_changed(self):
         name = self.combo.currentText()
         if name == _NO_PRESET:
+            self._save_last_preset("")
             return
+        self._save_last_preset(name)
         preset = PresetManager.load_preset(name)
         if preset:
             self.preset_loaded.emit(preset)
+
+    def _save_last_preset(self, name: str):
+        if self._app_settings:
+            self._app_settings.setValue(SettingsNames.LAST_PRESET_NAME, name)
 
     def _on_save(self):
         if not self.get_current_values:

@@ -15,6 +15,7 @@ class SettingsNames:
     SYSTEM_PROMPT_SETTING_NAME = "system_prompt"
     USER_PROMPT_SETTING_NAME = "user_prompt"
     RESPONSE_KEYS_SETTING_NAME = "response_keys"
+    LAST_PRESET_NAME = "last_preset_name"
 
 
 def get_settings() -> QSettings:
