@@ -3,11 +3,11 @@ import time
 import requests
 import json
 
-from .constants import GEMINI_BASE_URL
-from .exceptions import ExternalException
-from .llm_client import LLMClient
+from ..core.constants import GEMINI_BASE_URL
+from ..core.exceptions import ExternalException
+from .base import LLMClient
 from .response_utils import get_gemini_response_format
-from .prompt_config import PromptConfig
+from ..core.prompt_config import PromptConfig
 
 
 class GeminiClient(LLMClient):

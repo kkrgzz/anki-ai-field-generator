@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from anki.notes import Note as AnkiNote
 
-from .prompt_config import PromptConfig
+from ..core.prompt_config import PromptConfig
 
 
 class LLMClient(ABC):

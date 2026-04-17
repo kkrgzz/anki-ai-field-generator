@@ -1,10 +1,10 @@
 import json
 import requests
 
-from .constants import DEEPSEEK_BASE_URL
-from .exceptions import ExternalException
-from .llm_client import LLMClient
-from .prompt_config import PromptConfig
+from ..core.constants import DEEPSEEK_BASE_URL
+from ..core.exceptions import ExternalException
+from .base import LLMClient
+from ..core.prompt_config import PromptConfig
 
 
 class DeepseekClient(LLMClient):

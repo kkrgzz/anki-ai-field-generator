@@ -2,11 +2,11 @@ import threading
 import time
 import requests
 
-from .constants import CLAUDE_BASE_URL
-from .exceptions import ExternalException
-from .llm_client import LLMClient
+from ..core.constants import CLAUDE_BASE_URL
+from ..core.exceptions import ExternalException
+from .base import LLMClient
 from .response_utils import get_anthropic_tool
-from .prompt_config import PromptConfig
+from ..core.prompt_config import PromptConfig
 
 
 class ClaudeClient(LLMClient):
