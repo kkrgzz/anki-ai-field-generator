@@ -3,6 +3,7 @@
 from PyQt6.QtCore import QThread, pyqtSignal, Qt
 from PyQt6.QtWidgets import (
     QDialog,
+    QGroupBox,
     QHBoxLayout,
     QLabel,
     QPushButton,
@@ -13,6 +14,7 @@ from PyQt6.QtWidgets import (
 
 from ..clients.base import LLMClient
 from ..core.exceptions import ExternalException
+from .styles import apply_stylesheet, SPACING_MD, SPACING_LG
 
 
 class PreviewWorker(QThread):
