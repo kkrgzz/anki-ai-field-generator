@@ -67,14 +67,14 @@ class PreviewDialog(QDialog):
         prompt_layout.addWidget(self._section_label("System Prompt"))
         self.system_prompt_view = QTextEdit()
         self.system_prompt_view.setReadOnly(True)
-        self.system_prompt_view.setMaximumHeight(120)
+        self.system_prompt_view.setMinimumHeight(80)
         self.system_prompt_view.setPlainText(client.prompt_config.system_prompt)
         prompt_layout.addWidget(self.system_prompt_view)
 
         prompt_layout.addWidget(self._section_label("User Prompt (filled with card data)"))
         self.user_prompt_view = QTextEdit()
         self.user_prompt_view.setReadOnly(True)
-        self.user_prompt_view.setMaximumHeight(100)
+        self.user_prompt_view.setMinimumHeight(60)
         try:
             filled_prompt = client.get_user_prompt(note)
         except Exception as e:
@@ -104,7 +104,7 @@ class PreviewDialog(QDialog):
 
         self.mapping_view = QTextEdit()
         self.mapping_view.setReadOnly(True)
-        self.mapping_view.setMaximumHeight(120)
+        self.mapping_view.setMinimumHeight(80)
         mapping_layout.addWidget(self.mapping_view)
 
         layout.addWidget(mapping_group)

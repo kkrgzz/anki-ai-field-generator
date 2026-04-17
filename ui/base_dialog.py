@@ -106,7 +106,7 @@ class UserBaseDialog(QWidget, metaclass=MyMeta):
             self.ui_tools.create_text_edit(
                 SettingsNames.SYSTEM_PROMPT_SETTING_NAME,
                 self.system_prompt_placeholder,
-                max_height=300,
+                min_height=180,
             )
         )
         left_layout.addWidget(sys_group)
@@ -156,7 +156,7 @@ class UserBaseDialog(QWidget, metaclass=MyMeta):
             self.ui_tools.create_text_edit(
                 SettingsNames.USER_PROMPT_SETTING_NAME,
                 self.user_prompt_placeholder,
-                max_height=150,
+                min_height=100,
             )
         )
 
@@ -281,11 +281,11 @@ class UserBaseDialog(QWidget, metaclass=MyMeta):
     def _apply_preset(self, preset: dict, card_fields: list[str]):
         system_widget = self.ui_tools.widgets.get(SettingsNames.SYSTEM_PROMPT_SETTING_NAME)
         if system_widget:
-            system_widget.setText(preset.get("system_prompt", ""))
+            system_widget.setPlainText(preset.get("system_prompt", ""))
 
         user_widget = self.ui_tools.widgets.get(SettingsNames.USER_PROMPT_SETTING_NAME)
         if user_widget:
-            user_widget.setText(preset.get("user_prompt", ""))
+            user_widget.setPlainText(preset.get("user_prompt", ""))
 
         old_form = self.two_col_form
         self._two_col_form_layout.removeWidget(old_form)
