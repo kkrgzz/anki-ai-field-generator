@@ -236,6 +236,34 @@ QLabel[cssClass="arrow"] {{
     font-size: 16px;
 }}
 
+/* ── Tab widget ───────────────────────────────────── */
+QTabWidget::pane {{
+    border: 1px solid {COLOR_BORDER};
+    border-radius: {SECTION_RADIUS}px;
+    background-color: {COLOR_SURFACE};
+    top: -1px;
+}}
+QTabBar::tab {{
+    background-color: {COLOR_BG};
+    border: 1px solid {COLOR_BORDER};
+    border-bottom: none;
+    border-top-left-radius: {INPUT_RADIUS}px;
+    border-top-right-radius: {INPUT_RADIUS}px;
+    padding: {SPACING_SM}px {SPACING_LG}px;
+    color: {COLOR_TEXT_SECONDARY};
+    font-size: {FONT_SIZE_MD}px;
+    min-width: 80px;
+}}
+QTabBar::tab:selected {{
+    background-color: {COLOR_SURFACE};
+    color: {COLOR_TEXT};
+    font-weight: bold;
+}}
+QTabBar::tab:hover:!selected {{
+    background-color: {COLOR_SURFACE_HOVER};
+    color: {COLOR_TEXT};
+}}
+
 /* ── Dialog button box ────────────────────────────── */
 QDialogButtonBox {{
     padding-top: {SPACING_MD}px;
