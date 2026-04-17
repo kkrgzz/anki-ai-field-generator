@@ -2,21 +2,21 @@
 Factory that returns the corrent LLM Client configurations.
 """
 
-from .claude_client import ClaudeClient
-from .claude_dialog import ClaudeDialog
-from .deepseek_client import DeepseekClient
-from .deepseek_dialog import DeepSeekDialog
-from .gemini_client import GeminiClient
-from .gemini_dialog import GeminiDialog
-from .llm_client import LLMClient
-from .main_window import MainWindow
-from .note_processor import NoteProcessor
-from .openai_client import OpenAIClient
-from .openai_dialog import OpenAIDialog
-from .prompt_config import PromptConfig
-from .progress_bar import ProgressDialog
-from .settings import get_settings, set_new_settings_group
-from .user_base_dialog import UserBaseDialog
+from .clients.claude_client import ClaudeClient
+from .ui.claude_dialog import ClaudeDialog
+from .clients.deepseek_client import DeepseekClient
+from .ui.deepseek_dialog import DeepSeekDialog
+from .clients.gemini_client import GeminiClient
+from .ui.gemini_dialog import GeminiDialog
+from .clients.base import LLMClient
+from .ui.main_window import MainWindow
+from .core.note_processor import NoteProcessor
+from .clients.openai_client import OpenAIClient
+from .ui.openai_dialog import OpenAIDialog
+from .core.prompt_config import PromptConfig
+from .ui.progress_bar import ProgressDialog
+from .core.settings import get_settings, set_new_settings_group
+from .ui.base_dialog import UserBaseDialog
 
 
 class ClientFactory:
