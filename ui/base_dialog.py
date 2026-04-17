@@ -12,6 +12,7 @@ from aqt.qt import (
 from PyQt6 import QtCore
 from ..core.settings import SettingsNames
 from .dynamic_form import DynamicForm
+from .preset_bar import PresetBar
 from .tools import UITools
 
 
@@ -68,6 +69,15 @@ class UserBaseDialog(QWidget, metaclass=MyMeta):
         right_container.setLayout(right_layout)
         right_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
+        # Preset Bar
+        self.preset_bar = PresetBar()
+        self.preset_bar.get_current_values = self._get_preset_values
+        self.preset_bar.preset_loaded.connect(
+            lambda preset: self._apply_preset(preset, card_fields)
+        )
+        right_layout.addWidget(self.ui_tools.create_label("Presets:"))
+        right_layout.addWidget(self.preset_bar)
+
         # User Prompt
         self.add_user_prompt(
             right_layout, self.user_prompt_description, self.user_prompt_placeholder
@@ -86,6 +96,7 @@ class UserBaseDialog(QWidget, metaclass=MyMeta):
         right_layout.addWidget(
             self.ui_tools.create_descriptive_text(self.mapping_instruction_text)
         )
+        self._card_fields = card_fields
         self.two_col_form = DynamicForm(
             self.app_settings.value(
                 SettingsNames.RESPONSE_KEYS_SETTING_NAME, type="QStringList"
@@ -95,6 +106,8 @@ class UserBaseDialog(QWidget, metaclass=MyMeta):
             ),
             card_fields,
         )
+        self._two_col_form_layout = right_layout
+        self._two_col_form_index = right_layout.count()
         right_layout.addWidget(self.two_col_form)
 
         # Misc
@@ -233,6 +246,43 @@ class UserBaseDialog(QWidget, metaclass=MyMeta):
             fields,
         )
         return True
+
+    def _get_preset_values(self) -> dict:
+        """Returns current form values for saving as a preset."""
+        settings = self.ui_tools.get_settings()
+        keys, fields = self.two_col_form.get_inputs()
+        return {
+            "system_prompt": settings.get(SettingsNames.SYSTEM_PROMPT_SETTING_NAME, ""),
+            "user_prompt": settings.get(SettingsNames.USER_PROMPT_SETTING_NAME, ""),
+            "response_keys": keys,
+            "destination_fields": fields,
+        }
+
+    def _apply_preset(self, preset: dict, card_fields: list[str]):
+        """Loads a preset into the current form widgets."""
+        # Update system prompt
+        system_widget = self.ui_tools.widgets.get(SettingsNames.SYSTEM_PROMPT_SETTING_NAME)
+        if system_widget:
+            system_widget.setText(preset.get("system_prompt", ""))
+
+        # Update user prompt
+        user_widget = self.ui_tools.widgets.get(SettingsNames.USER_PROMPT_SETTING_NAME)
+        if user_widget:
+            user_widget.setText(preset.get("user_prompt", ""))
+
+        # Replace the DynamicForm
+        old_form = self.two_col_form
+        self._two_col_form_layout.removeWidget(old_form)
+        old_form.deleteLater()
+
+        self.two_col_form = DynamicForm(
+            preset.get("response_keys", []),
+            preset.get("destination_fields", []),
+            card_fields,
+        )
+        self._two_col_form_layout.insertWidget(
+            self._two_col_form_index, self.two_col_form
+        )
 
     def are_settings_valid(self) -> bool:
         """
