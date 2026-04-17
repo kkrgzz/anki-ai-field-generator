@@ -56,7 +56,7 @@ class ProgressDialog(QDialog):
 
         self.log_view = QTextEdit()
         self.log_view.setReadOnly(True)
-        self.log_view.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
+        self.log_view.setLineWrapMode(QTextEdit.LineWrapMode.WidgetWidth)
         log_layout.addWidget(self.log_view)
 
         log_tab.setLayout(log_layout)
