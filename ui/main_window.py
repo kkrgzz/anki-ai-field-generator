@@ -98,3 +98,10 @@ class MainWindow(QMainWindow):
         # which the on_submit might need
         if self.current_client_widget.accept():
             on_submit()
+
+    def run_preview(self):
+        """
+        Saves settings and opens the preview dialog for the first selected card.
+        """
+        if self.current_client_widget.accept():
+            self.on_preview()
