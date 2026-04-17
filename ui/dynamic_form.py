@@ -58,7 +58,24 @@ class DynamicForm(QWidget):
         row_layout.addWidget(combo_box)
         combo_box.setCurrentText(field)
 
+        remove_btn = QPushButton("\u2212")
+        remove_btn.setFixedWidth(28)
+        remove_btn.setToolTip("Remove mapping")
+        remove_btn.setProperty("cssClass", "danger")
+        remove_btn.clicked.connect(partial(self._remove_row, row_layout))
+        row_layout.addWidget(remove_btn)
+
         self.layout.insertLayout(self.layout.count() - 1, row_layout)
+
+    def _remove_row(self, row_layout: QHBoxLayout):
+        # Remove all widgets in the row
+        while row_layout.count():
+            item = row_layout.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+        self.layout.removeItem(row_layout)
+        row_layout.deleteLater()
 
     def get_inputs(self):
         """
