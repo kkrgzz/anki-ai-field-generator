@@ -10,9 +10,9 @@ from aqt.qt import (
     QScrollArea,
 )
 from PyQt6 import QtCore
-from .settings import SettingsNames
-from .two_col_layout import DynamicForm
-from .ui_tools import UITools
+from ..core.settings import SettingsNames
+from .dynamic_form import DynamicForm
+from .tools import UITools
 
 
 # I think I should have:

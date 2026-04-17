@@ -9,7 +9,7 @@ from PyQt6.QtWidgets import (
     QComboBox,
 )
 
-from .ui_tools import UITools
+from .tools import UITools
 
 
 #  Main Window

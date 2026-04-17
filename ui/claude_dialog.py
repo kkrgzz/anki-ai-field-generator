@@ -1,5 +1,5 @@
-from .constants import CLAUDE_BASE_URL
-from .user_base_dialog import UserBaseDialog
+from ..core.constants import CLAUDE_BASE_URL
+from .base_dialog import UserBaseDialog
 
 
 class ClaudeDialog(UserBaseDialog):

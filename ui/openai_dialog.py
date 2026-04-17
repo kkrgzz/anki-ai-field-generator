@@ -1,5 +1,5 @@
-from .constants import OPENAI_BASE_URL
-from .user_base_dialog import UserBaseDialog
+from ..core.constants import OPENAI_BASE_URL
+from .base_dialog import UserBaseDialog
 
 
 class OpenAIDialog(UserBaseDialog):

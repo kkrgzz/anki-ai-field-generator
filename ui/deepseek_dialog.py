@@ -1,5 +1,5 @@
-from .constants import DEEPSEEK_BASE_URL
-from .user_base_dialog import UserBaseDialog
+from ..core.constants import DEEPSEEK_BASE_URL
+from .base_dialog import UserBaseDialog
 
 
 class DeepSeekDialog(UserBaseDialog):
