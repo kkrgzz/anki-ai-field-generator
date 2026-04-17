@@ -308,7 +308,7 @@ class UserBaseDialog(QWidget, metaclass=MyMeta):
 
         self.two_col_form = DynamicForm(
             preset.get("response_keys", []),
-            preset.get("destination_fields", []),
+            preset.get("destination_field", []),
             card_fields,
         )
         self._two_col_form_layout.insertWidget(
