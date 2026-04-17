@@ -5,7 +5,7 @@ from aqt.qt import QSettings
 from PyQt6.QtCore import QThread, pyqtSignal
 
 from .exceptions import ExternalException
-from .llm_client import LLMClient
+from ..clients.base import LLMClient
 from .settings import SettingsNames
 
 
