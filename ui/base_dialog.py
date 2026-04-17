@@ -3,10 +3,13 @@ from anki.notes import Note as AnkiNote
 from aqt.qt import (
     QSettings,
     QWidget,
+    QFrame,
+    QGridLayout,
     QGroupBox,
     QHBoxLayout,
     QLabel,
     QMessageBox,
+    QPushButton,
     QVBoxLayout,
     Qt,
     QScrollArea,
@@ -15,7 +18,7 @@ from PyQt6 import QtCore
 from ..core.settings import SettingsNames
 from .dynamic_form import DynamicForm
 from .preset_bar import PresetBar
-from .styles import SPACING_SM, SPACING_MD, SPACING_LG, COLOR_TEXT_SECONDARY
+from .styles import SPACING_SM, SPACING_MD, SPACING_LG, COLOR_TEXT_SECONDARY, COLOR_BORDER
 from .tools import UITools
 
 
@@ -40,58 +43,91 @@ class UserBaseDialog(QWidget, metaclass=MyMeta):
 
         self.resize(self._width * 2 + 20, 750)
         container_widget = QWidget()
-        main_layout = QHBoxLayout(container_widget)
-        main_layout.setSpacing(SPACING_LG)
+        outer_layout = QVBoxLayout(container_widget)
+        outer_layout.setSpacing(SPACING_MD)
 
-        # -- LEFT COLUMN --
-        left_container = QWidget()
-        left_container.setMaximumWidth(self._width)
-        left_layout = QVBoxLayout()
-        left_layout.setContentsMargins(0, 0, 0, 0)
-        left_layout.setSpacing(SPACING_SM)
-        left_container.setLayout(left_layout)
+        # ── Connection Settings (collapsible, compact grid) ──
+        conn_header = QHBoxLayout()
+        self._conn_toggle = QPushButton("\u25BC Connection Settings")
+        self._conn_toggle.setFlat(True)
+        self._conn_toggle.setStyleSheet(
+            f"text-align: left; font-weight: bold; font-size: 13px; "
+            f"border: none; padding: 4px 0;"
+        )
+        self._conn_toggle.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._conn_toggle.clicked.connect(self._toggle_connection)
+        conn_header.addWidget(self._conn_toggle)
+        conn_header.addStretch()
+        outer_layout.addLayout(conn_header)
 
-        # Connection Settings group
-        conn_group = QGroupBox("Connection Settings")
-        conn_layout = QVBoxLayout()
-        conn_layout.setSpacing(SPACING_MD)
-        conn_group.setLayout(conn_layout)
+        self._conn_frame = QFrame()
+        self._conn_frame.setStyleSheet(
+            f"QFrame {{ border: 1px solid {COLOR_BORDER}; border-radius: 6px; "
+            f"padding: 8px; }}"
+        )
+        conn_grid = QGridLayout()
+        conn_grid.setSpacing(SPACING_MD)
+        conn_grid.setColumnStretch(1, 1)
+        conn_grid.setColumnStretch(3, 1)
 
-        conn_layout.addWidget(self._field_label("Model"))
-        conn_layout.addWidget(
+        conn_grid.addWidget(self._field_label("Model"), 0, 0)
+        conn_grid.addWidget(
             self.ui_tools.create_dropdown(
                 SettingsNames.MODEL_SETTING_NAME, self.models, allow_custom=True
-            )
+            ), 0, 1
         )
 
-        conn_layout.addWidget(self._field_label(f"{self.service_name} API Key"))
-        conn_layout.addWidget(
-            self.ui_tools.create_text_entry(SettingsNames.API_KEY_SETTING_NAME)
+        conn_grid.addWidget(self._field_label(f"{self.service_name} API Key"), 0, 2)
+        conn_grid.addWidget(
+            self.ui_tools.create_text_entry(SettingsNames.API_KEY_SETTING_NAME), 0, 3
         )
 
-        conn_layout.addWidget(self._field_label("Base URL"))
-        desc = QLabel("Override the default API endpoint (leave blank for default)")
-        desc.setProperty("cssClass", "muted")
-        desc.setWordWrap(True)
-        conn_layout.addWidget(desc)
-        conn_layout.addWidget(
+        conn_grid.addWidget(self._field_label("Base URL"), 1, 0)
+        conn_grid.addWidget(
             self.ui_tools.create_text_entry(
                 SettingsNames.BASE_URL_SETTING_NAME,
                 placeholder=self.base_url,
-            )
+            ), 1, 1
         )
 
-        conn_layout.addWidget(self._field_label("Max Concurrent Requests"))
-        conn_layout.addWidget(
+        conn_grid.addWidget(self._field_label("Max Requests"), 1, 2)
+        conn_grid.addWidget(
             self.ui_tools.create_text_entry(
                 SettingsNames.MAX_CONCURRENT_REQUESTS_SETTING_NAME,
                 placeholder="10",
                 default_value="10",
-            )
+            ), 1, 3
         )
-        left_layout.addWidget(conn_group)
 
-        # System Prompt group
+        self._conn_frame.setLayout(conn_grid)
+        outer_layout.addWidget(self._conn_frame)
+
+        # Auto-collapse if API key is already set
+        api_key = self.app_settings.value(SettingsNames.API_KEY_SETTING_NAME, "")
+        if api_key:
+            self._conn_frame.hide()
+            self._conn_toggle.setText("\u25B6 Connection Settings")
+
+        # ── Presets bar (full width, compact) ──
+        preset_row = QHBoxLayout()
+        preset_row.setSpacing(SPACING_MD)
+        preset_label = QLabel("Preset:")
+        preset_label.setStyleSheet("font-weight: bold;")
+        preset_row.addWidget(preset_label)
+
+        self.preset_bar = PresetBar(app_settings=self.app_settings)
+        self.preset_bar.get_current_values = self._get_preset_values
+        self.preset_bar.preset_loaded.connect(
+            lambda preset: self._apply_preset(preset, card_fields)
+        )
+        preset_row.addWidget(self.preset_bar)
+        outer_layout.addLayout(preset_row)
+
+        # ── Two-column prompts ──
+        prompt_columns = QHBoxLayout()
+        prompt_columns.setSpacing(SPACING_LG)
+
+        # Left: System Prompt
         sys_group = QGroupBox("System Prompt")
         sys_layout = QVBoxLayout()
         sys_layout.setSpacing(SPACING_MD)
@@ -106,42 +142,12 @@ class UserBaseDialog(QWidget, metaclass=MyMeta):
             self.ui_tools.create_text_edit(
                 SettingsNames.SYSTEM_PROMPT_SETTING_NAME,
                 self.system_prompt_placeholder,
-                min_height=180,
+                min_height=200,
             )
         )
-        left_layout.addWidget(sys_group)
+        prompt_columns.addWidget(sys_group)
 
-        left_layout.addStretch()
-
-        # -- RIGHT COLUMN --
-        right_container = QWidget()
-        right_container.setMaximumWidth(self._width)
-        right_layout = QVBoxLayout()
-        right_layout.setContentsMargins(0, 0, 0, 0)
-        right_layout.setSpacing(SPACING_SM)
-        right_container.setLayout(right_layout)
-        right_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-
-        # Presets group
-        preset_group = QGroupBox("Presets")
-        preset_layout = QVBoxLayout()
-        preset_layout.setSpacing(SPACING_MD)
-        preset_group.setLayout(preset_layout)
-
-        preset_desc = QLabel("Save and load prompt configurations for reuse across providers.")
-        preset_desc.setProperty("cssClass", "muted")
-        preset_desc.setWordWrap(True)
-        preset_layout.addWidget(preset_desc)
-
-        self.preset_bar = PresetBar(app_settings=self.app_settings)
-        self.preset_bar.get_current_values = self._get_preset_values
-        self.preset_bar.preset_loaded.connect(
-            lambda preset: self._apply_preset(preset, card_fields)
-        )
-        preset_layout.addWidget(self.preset_bar)
-        right_layout.addWidget(preset_group)
-
-        # User Prompt group
+        # Right: User Prompt
         user_group = QGroupBox("User Prompt")
         user_layout = QVBoxLayout()
         user_layout.setSpacing(SPACING_MD)
@@ -156,7 +162,7 @@ class UserBaseDialog(QWidget, metaclass=MyMeta):
             self.ui_tools.create_text_edit(
                 SettingsNames.USER_PROMPT_SETTING_NAME,
                 self.user_prompt_placeholder,
-                min_height=100,
+                min_height=120,
             )
         )
 
@@ -167,9 +173,12 @@ class UserBaseDialog(QWidget, metaclass=MyMeta):
         fields_label.setWordWrap(True)
         user_layout.addWidget(fields_label)
 
-        right_layout.addWidget(user_group)
+        user_layout.addStretch()
+        prompt_columns.addWidget(user_group)
 
-        # Output Mapping group
+        outer_layout.addLayout(prompt_columns)
+
+        # ── Field Mapping (full width) ──
         mapping_group = QGroupBox("Output \u2192 Field Mapping")
         mapping_layout = QVBoxLayout()
         mapping_layout.setSpacing(SPACING_MD)
@@ -196,15 +205,12 @@ class UserBaseDialog(QWidget, metaclass=MyMeta):
         self._two_col_form_index = mapping_layout.count()
         mapping_layout.addWidget(self.two_col_form)
 
-        right_layout.addWidget(mapping_group)
+        outer_layout.addWidget(mapping_group)
 
         # Status bar
         status = QLabel(f"{len(self.selected_notes)} card(s) selected")
         status.setProperty("cssClass", "status-info")
-        right_layout.addWidget(status)
-
-        main_layout.addWidget(left_container)
-        main_layout.addWidget(right_container)
+        outer_layout.addWidget(status)
 
         scroll_area = QScrollArea(self)
         scroll_area.setWidgetResizable(True)
@@ -215,6 +221,15 @@ class UserBaseDialog(QWidget, metaclass=MyMeta):
         final_layout.addWidget(scroll_area)
         self.setLayout(final_layout)
         return self
+
+    def _toggle_connection(self):
+        """Toggle the connection settings panel visibility."""
+        if self._conn_frame.isVisible():
+            self._conn_frame.hide()
+            self._conn_toggle.setText("\u25B6 Connection Settings")
+        else:
+            self._conn_frame.show()
+            self._conn_toggle.setText("\u25BC Connection Settings")
 
     def _field_label(self, text: str) -> QLabel:
         label = QLabel(text)
