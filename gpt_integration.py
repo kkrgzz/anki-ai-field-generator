@@ -10,7 +10,7 @@ def on_setup_menus(browser):
         client_factory = ClientFactory(browser)
         client_factory.show()
 
-    menu = QMenu("Anki AI", browser.form.menubar)
+    menu = QMenu("Anki AI V2", browser.form.menubar)
     browser.form.menubar.addMenu(menu)
     cps_action = QAction("Update Your Flashcards with AI", mw)
     cps_action.triggered.connect(display_ui)
