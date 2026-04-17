@@ -27,6 +27,8 @@ class PresetBar(QWidget):
     def __init__(self, app_settings: QSettings = None, parent=None):
         super().__init__(parent)
         self._app_settings = app_settings
+        self._loaded_snapshot = None  # snapshot of preset values when loaded
+        self._dirty = False
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(SPACING_SM)
@@ -79,13 +81,99 @@ class PresetBar(QWidget):
 
     def _on_selection_changed(self):
         name = self.combo.currentText()
-        if name == _NO_PRESET:
+        # Strip dirty marker for comparison
+        clean_name = name.rstrip(" *")
+
+        if clean_name == _NO_PRESET or name == _NO_PRESET:
             self._save_last_preset("")
+            self._loaded_snapshot = None
+            self._dirty = False
             return
-        self._save_last_preset(name)
-        preset = PresetManager.load_preset(name)
+
+        # Warn about unsaved changes before switching
+        if self._dirty and self._loaded_snapshot:
+            reply = QMessageBox.question(
+                self,
+                "Unsaved Changes",
+                "You have unsaved changes to the current preset. "
+                "Switch anyway and discard changes?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            )
+            if reply != QMessageBox.StandardButton.Yes:
+                # Revert combo to previous preset (block signals to avoid recursion)
+                self.combo.blockSignals(True)
+                old_name = self._loaded_snapshot.get("_name", "")
+                idx = self.combo.findText(old_name)
+                if idx < 0:
+                    idx = self.combo.findText(old_name + " *")
+                if idx >= 0:
+                    self.combo.setCurrentIndex(idx)
+                self.combo.blockSignals(False)
+                return
+
+        self._save_last_preset(clean_name)
+        preset = PresetManager.load_preset(clean_name)
         if preset:
+            self._loaded_snapshot = dict(preset)
+            self._loaded_snapshot["_name"] = clean_name
+            self._dirty = False
+            self._update_combo_label()
             self.preset_loaded.emit(preset)
+
+    def mark_dirty(self):
+        """Called by the dialog when any preset-tracked field changes."""
+        if self._loaded_snapshot is None:
+            return  # No preset active, nothing to track
+        if not self._dirty:
+            self._dirty = True
+            self._update_combo_label()
+
+    def is_dirty(self) -> bool:
+        return self._dirty
+
+    def active_preset_name(self) -> str | None:
+        """Returns the clean name of the active preset, or None."""
+        if self._loaded_snapshot is None:
+            return None
+        return self._loaded_snapshot.get("_name")
+
+    def mark_clean(self):
+        """Mark the current preset as saved/clean."""
+        self._dirty = False
+        self._update_combo_label()
+
+    def save_active_preset(self, values: dict):
+        """Silently save the active preset with updated values."""
+        name = self.active_preset_name()
+        if not name:
+            return
+        PresetManager.save_preset(
+            name,
+            system_prompt=values.get("system_prompt", ""),
+            user_prompt=values.get("user_prompt", ""),
+            response_keys=values.get("response_keys", []),
+            destination_fields=values.get("destination_fields", []),
+        )
+        self._loaded_snapshot = {
+            "system_prompt": values.get("system_prompt", ""),
+            "user_prompt": values.get("user_prompt", ""),
+            "response_keys": values.get("response_keys", []),
+            "destination_field": values.get("destination_fields", []),
+            "_name": name,
+        }
+        self._dirty = False
+        self._update_combo_label()
+
+    def _update_combo_label(self):
+        """Add or remove the dirty '*' marker on the current combo item."""
+        idx = self.combo.currentIndex()
+        if idx <= 0:
+            return
+        name = self.combo.itemText(idx).rstrip(" *")
+        display = f"{name} *" if self._dirty else name
+        self.combo.blockSignals(True)
+        self.combo.setItemText(idx, display)
+        self.combo.blockSignals(False)
 
     def _save_last_preset(self, name: str):
         if self._app_settings:
@@ -124,6 +212,9 @@ class PresetBar(QWidget):
             response_keys=values["response_keys"],
             destination_fields=values["destination_fields"],
         )
+        self._loaded_snapshot = dict(values)
+        self._loaded_snapshot["_name"] = name
+        self._dirty = False
         self._refresh_list(select_name=name)
 
     def _on_delete(self):
@@ -138,6 +229,8 @@ class PresetBar(QWidget):
         )
         if reply == QMessageBox.StandardButton.Yes:
             PresetManager.delete_preset(name)
+            self._loaded_snapshot = None
+            self._dirty = False
             self._refresh_list()
 
     def _on_export(self):
