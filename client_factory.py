@@ -15,7 +15,8 @@ from .clients.openai_client import OpenAIClient
 from .ui.openai_dialog import OpenAIDialog
 from .core.prompt_config import PromptConfig
 from .ui.progress_bar import ProgressDialog
-from .core.settings import get_settings, set_new_settings_group
+from .ui.preview_dialog import PreviewDialog
+from .core.settings import get_settings, set_new_settings_group, SettingsNames
 from .ui.base_dialog import UserBaseDialog
 
 
@@ -81,11 +82,30 @@ class ClientFactory:
         """
         Displays the user settings UI.
         """
-        # self.get_dialog(self.client_name).show(notes)
         self.mw = MainWindow(
-            self, lambda: self.on_submit(browser=self.browser, notes=self.notes)
+            self,
+            lambda: self.on_submit(browser=self.browser, notes=self.notes),
+            lambda: self.on_preview(),
         )
         self.mw.show()
+
+    def on_preview(self):
+        """
+        Opens a preview dialog that tests the current config on the first selected card.
+        """
+        client = self.get_client()
+        note = self.notes[0]
+        prompt_config = PromptConfig(self.app_settings)
+        dialog = PreviewDialog(
+            client,
+            note,
+            response_keys=prompt_config.response_keys,
+            note_fields=self.app_settings.value(
+                SettingsNames.DESTINATION_FIELD_SETTING_NAME, type="QStringList"
+            ),
+            parent=self.mw,
+        )
+        dialog.exec()
 
     def on_submit(self, browser, notes):
         """
