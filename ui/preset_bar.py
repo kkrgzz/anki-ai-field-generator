@@ -12,16 +12,13 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import pyqtSignal
 
 from ..core.preset_manager import PresetManager
+from .styles import SPACING_SM
 
-# Placeholder shown when no preset is selected
 _NO_PRESET = "(No preset)"
 
 
 class PresetBar(QWidget):
-    """A toolbar with a preset dropdown and Save/Delete buttons.
-
-    Emits ``preset_loaded`` when user selects a preset, passing the preset dict.
-    """
+    """A toolbar with a preset dropdown and Save/Delete/Export/Import buttons."""
 
     preset_loaded = pyqtSignal(dict)
 
@@ -29,6 +26,7 @@ class PresetBar(QWidget):
         super().__init__(parent)
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(SPACING_SM)
 
         self.combo = QComboBox()
         self.combo.setMinimumWidth(200)
@@ -41,6 +39,7 @@ class PresetBar(QWidget):
         layout.addWidget(save_btn)
 
         delete_btn = QPushButton("Delete")
+        delete_btn.setProperty("cssClass", "danger")
         delete_btn.clicked.connect(self._on_delete)
         layout.addWidget(delete_btn)
 
