@@ -69,6 +69,11 @@ class MainWindow(QMainWindow):
         button_box = QDialogButtonBox(buttons)
         button_box.accepted.connect(lambda: self.accept(on_submit))
         button_box.rejected.connect(self.close)
+
+        test_button = QPushButton("Test on 1 Card")
+        button_box.addButton(test_button, QDialogButtonBox.ButtonRole.ActionRole)
+        test_button.clicked.connect(lambda: self.run_preview())
+
         self.layout.addWidget(button_box)
 
     def switch_client(self):
