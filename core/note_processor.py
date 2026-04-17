@@ -17,6 +17,7 @@ class NoteProcessor(QThread):
     progress_updated = pyqtSignal(int, str)  # Signal to update progress bar and label
     finished = pyqtSignal()  # Signal for when processing is done
     error = pyqtSignal(str)  # Signal for when processing is done
+    card_logged = pyqtSignal(int, str, dict)  # (card_index, prompt_sent, response_dict)
 
     def __init__(
         self,
@@ -106,9 +107,10 @@ class NoteProcessor(QThread):
                     )  # Mark this note as successfully completed
 
                     completed += 1
+                    self.card_logged.emit(i, prompt, response)
                     self.progress_updated.emit(
                         int((completed / self.total_items) * 100),
-                        f"Processed: {prompt}",
+                        f"Processed {completed} / {self.total_items} cards",
                     )
 
                     # Remove completed future
