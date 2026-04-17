@@ -4,6 +4,7 @@ from PyQt6.QtWidgets import (
     QDialogButtonBox,
     QHBoxLayout,
     QMainWindow,
+    QPushButton,
     QWidget,
     QVBoxLayout,
     QComboBox,
@@ -14,9 +15,10 @@ from .tools import UITools
 
 #  Main Window
 class MainWindow(QMainWindow):
-    def __init__(self, client_factory, on_submit: Callable):
+    def __init__(self, client_factory, on_submit: Callable, on_preview: Callable):
         super().__init__()
         self.client_factory = client_factory
+        self.on_preview = on_preview
         # Don't need to set the below parameters as we're not saving any data
         self.ui_tools = UITools(None, None)
 
