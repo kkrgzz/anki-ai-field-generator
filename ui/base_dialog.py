@@ -33,6 +33,7 @@ class UserBaseDialog(QWidget, metaclass=MyMeta):
         self.app_settings: QSettings = app_settings
         self.selected_notes = selected_notes
         self.ui_tools: UITools = UITools(app_settings, self._width)
+        self._applying_preset = False
 
     def show(self):
         if self.layout() is not None:
@@ -138,13 +139,13 @@ class UserBaseDialog(QWidget, metaclass=MyMeta):
         sys_desc.setWordWrap(True)
         sys_layout.addWidget(sys_desc)
 
-        sys_layout.addWidget(
-            self.ui_tools.create_text_edit(
-                SettingsNames.SYSTEM_PROMPT_SETTING_NAME,
-                self.system_prompt_placeholder,
-                min_height=200,
-            )
+        sys_edit = self.ui_tools.create_text_edit(
+            SettingsNames.SYSTEM_PROMPT_SETTING_NAME,
+            self.system_prompt_placeholder,
+            min_height=200,
         )
+        sys_edit.textChanged.connect(self._on_preset_field_changed)
+        sys_layout.addWidget(sys_edit)
         prompt_columns.addWidget(sys_group)
 
         # Right: User Prompt
@@ -158,13 +159,13 @@ class UserBaseDialog(QWidget, metaclass=MyMeta):
         user_desc.setWordWrap(True)
         user_layout.addWidget(user_desc)
 
-        user_layout.addWidget(
-            self.ui_tools.create_text_edit(
-                SettingsNames.USER_PROMPT_SETTING_NAME,
-                self.user_prompt_placeholder,
-                min_height=120,
-            )
+        user_edit = self.ui_tools.create_text_edit(
+            SettingsNames.USER_PROMPT_SETTING_NAME,
+            self.user_prompt_placeholder,
+            min_height=120,
         )
+        user_edit.textChanged.connect(self._on_preset_field_changed)
+        user_layout.addWidget(user_edit)
 
         fields_label = QLabel("Available fields: " + ", ".join(
             f"{{{f}}}" for f in card_fields
@@ -221,6 +222,11 @@ class UserBaseDialog(QWidget, metaclass=MyMeta):
         final_layout.addWidget(scroll_area)
         self.setLayout(final_layout)
         return self
+
+    def _on_preset_field_changed(self):
+        """Called when a preset-tracked field changes."""
+        if not self._applying_preset:
+            self.preset_bar.mark_dirty()
 
     def _toggle_connection(self):
         """Toggle the connection settings panel visibility."""
@@ -281,6 +287,9 @@ class UserBaseDialog(QWidget, metaclass=MyMeta):
             SettingsNames.DESTINATION_FIELD_SETTING_NAME,
             fields,
         )
+        # Auto-save the active preset if it was modified
+        if self.preset_bar.is_dirty() and self.preset_bar.active_preset_name():
+            self.preset_bar.save_active_preset(self._get_preset_values())
         return True
 
     def _get_preset_values(self) -> dict:
@@ -294,6 +303,9 @@ class UserBaseDialog(QWidget, metaclass=MyMeta):
         }
 
     def _apply_preset(self, preset: dict, card_fields: list[str]):
+        # Temporarily disable dirty tracking while applying preset values
+        self._applying_preset = True
+
         system_widget = self.ui_tools.widgets.get(SettingsNames.SYSTEM_PROMPT_SETTING_NAME)
         if system_widget:
             system_widget.setPlainText(preset.get("system_prompt", ""))
@@ -314,6 +326,8 @@ class UserBaseDialog(QWidget, metaclass=MyMeta):
         self._two_col_form_layout.insertWidget(
             self._two_col_form_index, self.two_col_form
         )
+
+        self._applying_preset = False
 
     def are_settings_valid(self) -> bool:
         settings = self.ui_tools.get_settings()

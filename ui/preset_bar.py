@@ -183,7 +183,7 @@ class PresetBar(QWidget):
         if not self.get_current_values:
             return
 
-        current_name = self.combo.currentText()
+        current_name = self.combo.currentText().rstrip(" *")
         default_name = "" if current_name == _NO_PRESET else current_name
 
         name, ok = QInputDialog.getText(
