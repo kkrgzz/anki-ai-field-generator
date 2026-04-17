@@ -1,5 +1,7 @@
 """Preset toolbar widget for saving/loading/deleting prompt presets."""
 
+from datetime import datetime
+
 from PyQt6.QtWidgets import (
     QComboBox,
     QFileDialog,
@@ -234,8 +236,15 @@ class PresetBar(QWidget):
             self._refresh_list()
 
     def _on_export(self):
+        current = self.combo.currentText().rstrip(" *")
+        if current and current != _NO_PRESET:
+            safe_name = current.replace(" ", "_")
+        else:
+            safe_name = "all_presets"
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        default_name = f"{safe_name}_preset_{timestamp}.json"
         file_path, _ = QFileDialog.getSaveFileName(
-            self, "Export Presets", "anki_ai_presets.json",
+            self, "Export Presets", default_name,
             "JSON Files (*.json)"
         )
         if not file_path:
